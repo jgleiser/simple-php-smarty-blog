@@ -9,9 +9,8 @@ function checkDelArticle(blogid, articleid) {
 	link[1] = "delete_article.php?blogid="+blogid+"&id="+articleid;
 	new_url = link[1];
 	if(ans) {
-        window.location = new_url;
-    } else {
-    }
+		window.location = new_url;
+	}
 }
 
 function checkDelComment(blogid, commentid) {
@@ -21,8 +20,7 @@ function checkDelComment(blogid, commentid) {
 	link[1] = "delete_comment.php?blogid="+blogid+"&id="+id;
 	new_url = link[1];
 	if(ans) {
-        window.location = new_url;
-    } else {
-    }
+		window.location = new_url;
+	}
 }
 -->
