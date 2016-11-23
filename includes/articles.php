@@ -8,17 +8,17 @@ function get_article_list($blogid, $offset = 0, $limit = 0){
 	$query = "SELECT SQL_CALC_FOUND_ROWS a.id AS id, a.headline AS headline, u.name AS author FROM articles AS a, users AS u WHERE u.id = a.userid AND a.blogid = ".(int)$blogid." ORDER BY id DESC";
 	if((int)$offset >= 0) $query .= " LIMIT $offset, $items_per_page";
 	else if((int)$offset < 0 && (int)$limit > 0) $query .= " LIMIT $limit";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	$list = array();
 	if($result){
-		while($row = mysql_fetch_assoc($result)){
+		while($row = mysqli_fetch_assoc($result)){
 			$list[] = $row;
 		}
 	}
 	
 	// Get total number of articles
-	$result2 = mysql_query("SELECT FOUND_ROWS()");
-	$row = mysql_fetch_array($result2);
+	$result2 = mysqli_query($conn, "SELECT FOUND_ROWS()");
+	$row = mysqli_fetch_array($result2);
 	$rows_found = $row[0];
 	
 	close_db($conn);
@@ -29,8 +29,8 @@ function get_article_list($blogid, $offset = 0, $limit = 0){
 function get_article_newest($blogid){
 	$query = "SELECT id FROM articles WHERE blogid = ".(int)$blogid." ORDER BY id DESC LIMIT 1";
 	$conn = open_db();
-	$result = mysql_query($query);
-	$row = mysql_fetch_assoc($result);
+	$result = mysqli_query($conn, $query);
+	$row = mysqli_fetch_assoc($result);
 	close_db($conn);
 	return (int)$row['id'];
 }
@@ -39,9 +39,9 @@ function get_article_newest($blogid){
 function get_article_detail($articleid){
 	$query = "SELECT a.id AS id, a.headline AS headline, a.userid AS userid, u.name AS author, article_body AS article_body, a.blogid AS blogid, DATE_FORMAT(a.created, '%d/%m/%Y %H:%i') AS created FROM articles AS a, users AS u WHERE u.id = a.userid AND a.id = ".(int)$articleid;
 	$conn = open_db();
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 	}
 	close_db($conn);
 	return $row;
@@ -51,10 +51,10 @@ function get_article_detail($articleid){
 function get_article_tags($articleid){
 	$query = "SELECT tag.id AS id, tag.name AS name FROM tags AS tag, article_tag1 WHERE tag.id = article_tag1.tagid AND article_tag1.articleid = ".(int)$articleid;
 	$conn = open_db();
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	$data = array();
 	if($result){
-		while($row = mysql_fetch_assoc($result)){
+		while($row = mysqli_fetch_assoc($result)){
 			$data[] = $row;
 		}
 	}
@@ -65,12 +65,12 @@ function get_article_tags($articleid){
 // Check if an article headline exists in a blog
 function articleHeadlineExists($blogid, $headline, $articleid = 0){
 	$conn = open_db();
-	$headline = mysql_real_escape_string($headline, $conn) or show_error();
+	$headline = mysqli_real_escape_string($conn, $headline) or show_error($conn);
 	$query = "SELECT id FROM articles WHERE blogid = ".(int)$blogid." AND headline = '$headline'";
 	if((int)$articleid > 0) $query .= " AND id != ".(int)$articleid;
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 	}
 	close_db($conn);
 	if((int)$row['id'] > 0) return true;
@@ -98,12 +98,12 @@ function add_article($data){
 	$conn = open_db();
 	
 	// escape strings before the querys
-	$headline = mysql_real_escape_string($headline, $conn) or show_error();
-	$article_body = mysql_real_escape_string($article_body, $conn) or show_error();
+	$headline = mysqli_real_escape_string($conn, $headline) or show_error($conn);
+	$article_body = mysqli_real_escape_string($conn, $article_body) or show_error($conn);
 	
 	$query = "INSERT INTO articles (headline, userid, article_body, blogid) VALUES ('$headline', ".(int)$userid.", '$article_body', ".(int)$blogid.")";
-	$result = mysql_query($query);
-	$id = mysql_insert_id();
+	$result = mysqli_query($conn, $query);
+	$id = mysqli_insert_id($conn);
 	close_db($conn);
 	
 	// if the article was correctly inserted, create the tags
@@ -131,11 +131,11 @@ function mod_article($articleid, $data){
 	$conn = open_db();
 	
 	// escape strings before the querys
-	$headline = mysql_real_escape_string($headline, $conn) or show_error();
-	$article_body = mysql_real_escape_string($article_body, $conn) or show_error();
+	$headline = mysqli_real_escape_string($conn, $headline) or show_error($conn);
+	$article_body = mysqli_real_escape_string($conn, $article_body) or show_error($conn);
 	
 	$query = "UPDATE articles SET headline = '$headline', article_body = '$article_body' WHERE id = ".(int)$articleid;
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	
 	// if the update was successful, mod the tags
 	$checkTags = false;
@@ -165,7 +165,7 @@ function delete_article($articleid){
 	
 	$conn = open_db();
 	$query = "DELETE FROM articles WHERE id = ".(int)$articleid;
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	close_db($conn);
 	return $result;
 }
@@ -177,8 +177,8 @@ function check_prev_next_article($articleid){
 	
 	// Get the blogid from the article
 	$query = "SELECT blogid FROM articles WHERE id = ".(int)$articleid;
-	$result = mysql_query($query);
-	$row = mysql_fetch_assoc($result);
+	$result = mysqli_query($conn, $query);
+	$row = mysqli_fetch_assoc($result);
 	$blogid = $row['blogid'];
 	
 	// to get previous id
@@ -186,10 +186,10 @@ function check_prev_next_article($articleid){
 	// to get next id
 	$query2 = "SELECT id FROM articles WHERE blogid = $blogid AND id > ".(int)$articleid." ORDER BY id ASC LIMIT 1";
 	
-	$result1 = mysql_query($query1);
-	$result2 = mysql_query($query2);
-	$row1 = mysql_fetch_assoc($result1);
-	$row2 = mysql_fetch_assoc($result2);
+	$result1 = mysqli_query($conn, $query1);
+	$result2 = mysqli_query($conn, $query2);
+	$row1 = mysqli_fetch_assoc($result1);
+	$row2 = mysqli_fetch_assoc($result2);
 	
 	close_db($conn);
 	

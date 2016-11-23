@@ -78,8 +78,8 @@ function process_uploaded_image_file($image){
 function imageExists($imagedata){
 	$conn = open_db();
 	$query = "SELECT id FROM photos WHERE imagedata = '$imagedata' LIMIT 1";
-	$result = mysql_query($query);
-	if($result) $row = mysql_fetch_assoc($result);
+	$result = mysqli_query($conn, $query);
+	if($result) $row = mysqli_fetch_assoc($result);
 	close_db($conn);
 	if(empty($row) || (int)$row['id'] <= 0) return 0;
 	else return (int)$row['id'];
@@ -101,8 +101,8 @@ function addImage($image){
 	
 	$conn = open_db();
 	$query = "INSERT INTO photos (imagedata, imagename, imagetype, imagesize) VALUES ('$imagedata', '$imagename', '$imagetype', '$imagewidthheight')";
-	$result = mysql_query($query);
-	$id = mysql_insert_id();
+	$result = mysqli_query($conn, $query);
+	$id = mysqli_insert_id($conn);
 	close_db($conn);
 	return $id;
 }
@@ -112,8 +112,8 @@ function addImage($image){
 function getImage($id){
 	$conn = open_db();
 	$query = "SELECT imagedata, imagename, imagetype, imagesize FROM photos WHERE id = $id";
-	$result = mysql_query($query);
-	$row = mysql_fetch_array($result);
+	$result = mysqli_query($conn, $query);
+	$row = mysqli_fetch_array($result);
 	close_db($conn);
 	return $row;
 }
@@ -122,9 +122,9 @@ function getImage($id){
 function getAllImages(){
 	$conn = open_db();
 	$query = "SELECT id, imagename, imagesize FROM photos";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	$list = array();
-	while($row = mysql_fetch_assoc($result)){
+	while($row = mysqli_fetch_assoc($result)){
 	  $list[] = $row;
 	}
 	close_db($conn);
@@ -135,9 +135,9 @@ function getAllImages(){
 function getArticleImages($articleid){
 	$conn = open_db();
 	$query = "SELECT p.id AS id, p.imagename AS imagename, p.imagesize AS imagesize FROM photos AS p, article_photo1 AS ap WHERE p.id = ap.photoid AND ap.articleid = ".(int)$articleid;
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	$list = array();
-	while($row = mysql_fetch_assoc($result)){
+	while($row = mysqli_fetch_assoc($result)){
 	  $list[] = $row;
 	}
 	close_db($conn);
@@ -148,8 +148,8 @@ function getArticleImages($articleid){
 function check_article_photo_relation($articleid, $photoid){
 	$query = "SELECT id FROM article_photo1 WHERE articleid = ".(int)$articleid." AND photoid = ".(int)$photoid;
 	$conn = open_db();
-	$result = mysql_query($query);
-	$row = mysql_fetch_assoc($result);
+	$result = mysqli_query($conn, $query);
+	$row = mysqli_fetch_assoc($result);
 	if((int)$row['id'] > 0) return true;
 	return false;
 }
@@ -164,7 +164,7 @@ function addImageToArticle($articleid, $image){
 	// Add the relation
 	$conn = open_db();
 	$query = "INSERT INTO article_photo1 (articleid, photoid) VALUES ($articleid, $photoid)";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	close_db($conn);
 	return P_PHOTO_ADDED;
 }
@@ -173,17 +173,17 @@ function addImageToArticle($articleid, $image){
 function delete_article_photo($articleid, $photoid){
 	$conn = open_db();
 	$query = "DELETE FROM article_photo1 WHERE articleid = $articleid AND photoid = $photoid";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	// check if the photo doesn't have more relations with other articles
 	$query = "SELECT id FROM article_photo1 WHERE photoid = $photoid LIMIT 1";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 		if((int)$row['id'] > 0){ close_db($conn); return true; }
 		else {
 			// if a photo doesn't have more relations, then is not needed in the db and is deleted
 			$query = "DELETE FROM photos WHERE id = $photoid";
-			$result = mysql_query($query);
+			$result = mysqli_query($conn, $query);
 			close_db($conn);
 			return true;
 		}

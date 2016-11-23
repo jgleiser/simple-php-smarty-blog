@@ -3,9 +3,9 @@
 function blogExists($blogid){
 	$conn = open_db();
 	$query = "SELECT id FROM blogs WHERE id = ".(int)$blogid;
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 	}
 	close_db($conn);
 	if((int)$row['id'] > 0) return true;
@@ -15,11 +15,11 @@ function blogExists($blogid){
 // Check if a blog title is already registered
 function blogTitleExists($title){
 	$conn = open_db();
-	$title = mysql_real_escape_string($title, $conn) or show_error();
+	$title = mysqli_real_escape_string($conn, $title) or show_error($conn);
 	$query = "SELECT id FROM blogs WHERE title = '$title'";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 	}
 	close_db($conn);
 	if((int)$row['id'] > 0) return true;
@@ -45,13 +45,13 @@ function createNewBlog($data){
 	$conn = open_db();
 	
 	// escape strings before the querys
-	$title = mysql_real_escape_string($title, $conn) or show_error();
-	$summary = mysql_real_escape_string($summary, $conn) or show_error();
+	$title = mysqli_real_escape_string($conn, $title) or show_error($conn);
+	$summary = mysqli_real_escape_string($conn, $summary) or show_error($conn);
 	
 	// register the user to the db
 	$query = "INSERT INTO blogs (userid, title, summary) VALUES (".(int)$userid.", '$title', '$summary')";
-	$result = mysql_query($query);
-	$id = mysql_insert_id();
+	$result = mysqli_query($conn, $query);
+	$id = mysqli_insert_id($conn);
 	close_db($conn);
 	return $id;
 }
@@ -60,7 +60,7 @@ function createNewBlog($data){
 function deleteBlog($blogid){
 	$conn = open_db();
 	$query = "DELETE FROM blogs WHERE id = ".(int)$blogid;
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	close_db($conn);
 	return $result;
 }
@@ -69,9 +69,9 @@ function deleteBlog($blogid){
 function getBlogData($blogid){
 	$conn = open_db();
 	$query = "SELECT b.id AS id, b.userid AS userid, u.name AS author, b.title AS title, b.summary AS summary, DATE_FORMAT(b.created, '%d/%m/%Y %H:%i') AS created FROM blogs AS b, users AS u WHERE u.id = b.userid AND b.id = ".(int)$blogid;
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 	}
 	close_db($conn);
 	return $row;
@@ -81,9 +81,9 @@ function getBlogData($blogid){
 function userIsBlogOwner($userid, $blogid){
 	$conn = open_db();
 	$query = "SELECT id FROM blogs WHERE userid = ".(int)$userid." AND id = ".(int)$blogid;
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 	}
 	close_db($conn);
 	if((int)$row['id'] > 0) return true;
@@ -99,17 +99,17 @@ function getBlogs($userid = 0, $offset = 0){
 	if((int)$userid > 0) $query .= " AND b.userid = ".(int)$userid;
 	$query .= " ORDER BY b.id DESC LIMIT $offset, $items_per_page";
 	
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	$list = array();
 	if($result){
-		while($row = mysql_fetch_assoc($result)){
+		while($row = mysqli_fetch_assoc($result)){
 			$list[] = $row;
 		}
 	}
 	
 	// Get total number of articles
-	$result2 = mysql_query("SELECT FOUND_ROWS()");
-	$row = mysql_fetch_array($result2);
+	$result2 = mysqli_query($conn, "SELECT FOUND_ROWS()");
+	$row = mysqli_fetch_array($result2);
 	$rows_found = $row[0];
 	
 	close_db($conn);

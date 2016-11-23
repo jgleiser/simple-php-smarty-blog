@@ -5,10 +5,10 @@
 function get_tags(){
 	$query = "SELECT id, name FROM tags ORDER BY name ASC";
 	$conn = open_db();
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	$data = array();
 	if($result){
-		while($row = mysql_fetch_assoc($result)){
+		while($row = mysqli_fetch_assoc($result)){
 			$data[] = $row;
 		}
 	}
@@ -21,11 +21,11 @@ function get_tags(){
 function tag_exists($tagname){
 	$tagname = ucfirst(strtolower($tagname));
 	$conn = open_db();
-	$tagname = mysql_real_escape_string($tagname, $conn);
+	$tagname = mysqli_real_escape_string($conn, $tagname);
 	$query = "SELECT id FROM tags WHERE name = '$tagname'";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 		close_db($conn);
 		if((int)$row['id'] > 0) return (int)$row['id'];
 		else return 0;
@@ -38,8 +38,8 @@ function tag_exists($tagname){
 function check_article_tag_relation($articleid, $tagid){
 	$query = "SELECT id FROM article_tag1 WHERE articleid = $articleid AND tagid = $tagid";
 	$conn = open_db();
-	$result = mysql_query($query);
-	$row = mysql_fetch_assoc($result);
+	$result = mysqli_query($conn, $query);
+	$row = mysqli_fetch_assoc($result);
 	if((int)$row['id'] > 0) return true;
 	return false;
 }
@@ -55,16 +55,16 @@ function add_tag($tagname, $articleid){
 	if(check_article_tag_relation($articleid, $tagid)) return T_TAG_EXISTS;
 	
 	$conn = open_db();
-	$tagname = mysql_real_escape_string($tagname, $conn);
+	$tagname = mysqli_real_escape_string($conn, $tagname);
 	
 	// if tagid = 0, create the new tag
 	if($tagid == 0){
 		$query = "INSERT INTO tags (name) VALUES ('$tagname')";
-		$result = mysql_query($query);
-		$tagid = mysql_insert_id();
+		$result = mysqli_query($conn, $query);
+		$tagid = mysqli_insert_id($conn);
 	}
 	$query = "INSERT INTO article_tag1 (articleid, tagid) VALUES ($articleid, $tagid)";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	close_db($conn);
 	return T_TAG_ADDED;
 }
@@ -107,17 +107,17 @@ function modTagsInArticle($articleid, $tags){
 function delete_article_tag($articleid, $tagid){
 	$conn = open_db();
 	$query = "DELETE FROM article_tag1 WHERE articleid = $articleid AND tagid = $tagid";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	// check if the tag doesn't have more relations with other articles
 	$query = "SELECT id FROM article_tag1 WHERE tagid = $tagid LIMIT 1";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 		if((int)$row['id'] > 0){ close_db($conn); return true; }
 		else {
 			// if a tag doesn't have more relations, then si not needed in the db and is deleted
 			$query = "DELETE FROM tags WHERE id = $tagid";
-			$result = mysql_query($query);
+			$result = mysqli_query($conn, $query);
 			close_db($conn);
 			return true;
 		}

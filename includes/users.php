@@ -2,11 +2,11 @@
 // Check if a username exists in the database
 function usernameExists($username){
 	$conn = open_db();
-	$username = mysql_real_escape_string($username, $conn) or show_error();
+	$username = mysqli_real_escape_string($conn, $username) or show_error($conn);
 	$query = "SELECT id FROM users WHERE username = '$username'";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 	}
 	close_db($conn);
 	if((int)$row['id'] > 0) return true;
@@ -16,11 +16,11 @@ function usernameExists($username){
 // Check if an email exists in the database
 function emailExists($email){
 	$conn = open_db();
-	$email = mysql_real_escape_string($email, $conn) or show_error();
+	$email = mysqli_real_escape_string($conn, $email) or show_error($conn);
 	$query = "SELECT id FROM users WHERE email = '$email'";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 	}
 	close_db($conn);
 	if((int)$row['id'] > 0) return true;
@@ -70,15 +70,15 @@ function regiterNewUser($data){
 	$conn = open_db();
 	
 	// escape strings before the querys
-	$username = mysql_real_escape_string($username, $conn) or show_error();
-	$password = mysql_real_escape_string($password, $conn) or show_error();
-	$name = mysql_real_escape_string($name, $conn) or show_error();
-	$email = mysql_real_escape_string($email, $conn) or show_error();
+	$username = mysqli_real_escape_string($conn, $username) or show_error($conn);
+	$password = mysqli_real_escape_string($conn, $password) or show_error($conn);
+	$name = mysqli_real_escape_string($conn, $name) or show_error($conn);
+	$email = mysqli_real_escape_string($conn, $email) or show_error($conn);
 	
 	// register the user to the db
 	$query = "INSERT INTO users (username, password, name, email) VALUES ('$username', '$password', '$name', '$email')";
-	$result = mysql_query($query);
-	$id = mysql_insert_id();
+	$result = mysqli_query($conn, $query);
+	$id = mysqli_insert_id($conn);
 	close_db($conn);
 	return $id;
 }
@@ -91,13 +91,13 @@ function checkLogin($username, $password){
 	$conn = open_db();
 	
 	// escape strings before the querys
-	$username = mysql_real_escape_string($username, $conn) or show_error();
-	$password = mysql_real_escape_string($password, $conn) or show_error();
+	$username = mysqli_real_escape_string($conn, $username) or show_error($conn);
+	$password = mysqli_real_escape_string($conn, $password) or show_error($conn);
 	
 	$query = "SELECT id, password FROM users WHERE username = '$username'";
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 	}
 	close_db($conn);
 	
@@ -113,10 +113,10 @@ function checkLogin($username, $password){
 function getUserData($userid){
 	$conn = open_db();
 	$query = "SELECT username, name, email FROM users WHERE id = ".(int)$userid;
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	$row = array();
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 	}
 	close_db($conn);
 	
@@ -127,9 +127,9 @@ function getUserData($userid){
 function userHasBlog($userid){
 	$conn = open_db();
 	$query = "SELECT id FROM blogs WHERE userid = ".(int)$userid;
-	$result = mysql_query($query);
+	$result = mysqli_query($conn, $query);
 	if($result){
-		$row = mysql_fetch_assoc($result);
+		$row = mysqli_fetch_assoc($result);
 	}
 	close_db($conn);
 	if((int)$row['id'] > 0) return true;
